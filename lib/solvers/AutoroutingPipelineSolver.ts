@@ -31,7 +31,7 @@ import { convertHdRouteToSimplifiedRoute } from "lib/utils/convertHdRouteToSimpl
 import { mergeRouteSegments } from "lib/utils/mergeRouteSegments"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { MultipleHighDensityRouteStitchSolver } from "./RouteStitchingSolver/MultipleHighDensityRouteStitchSolver"
-import { convertSrjToGraphicsObject } from "tests/fixtures/convertSrjToGraphicsObject"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
 import { UnravelMultiSectionSolver } from "./UnravelSolver/UnravelMultiSectionSolver"
 import { CapacityPathingMultiSectionSolver } from "./CapacityPathingSectionSolver/CapacityPathingMultiSectionSolver" // Added import
 import { StrawSolver } from "./StrawSolver/StrawSolver"

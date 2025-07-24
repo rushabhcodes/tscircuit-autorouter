@@ -7,7 +7,7 @@ import type {
   Obstacle,
 } from "../lib/types"
 import { Line, Rect } from "graphics-debug"
-import { convertSrjToGraphicsObject } from "./fixtures/convertSrjToGraphicsObject"
+import { convertSrjToGraphicsObject } from "../lib"
 
 test("should solve keyboard1 board and produce valid SimpleRouteJson output", async () => {
   // Create a solver with the keyboard1 input

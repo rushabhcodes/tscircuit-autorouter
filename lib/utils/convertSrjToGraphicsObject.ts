@@ -1,5 +1,5 @@
 import { Rect, Line, Circle, Point } from "graphics-debug"
-import { SimpleRouteJson } from "../../lib/types/srj-types"
+import { SimpleRouteJson } from "lib/types"
 import { getColorMap, safeTransparentize } from "lib/solvers/colors"
 import { mapZToLayerName } from "lib/utils/mapZToLayerName"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
