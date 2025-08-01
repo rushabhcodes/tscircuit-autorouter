@@ -20,7 +20,13 @@ export class ObstacleSpatialHashIndex {
     obstacles: Obstacle[] = [],
   ) {
     if (implementation === "flatbush") {
-      this.idx = new FlatbushIndex<Obstacle>(obstacles.length)
+      if (obstacles.length === 0) {
+        // use rbush for empty data to avoid Flatbush limitations
+        this.idx = new RbushIndex<Obstacle>()
+        implementation = "rbush"
+      } else {
+        this.idx = new FlatbushIndex<Obstacle>(obstacles.length)
+      }
     } else if (implementation === "rbush") {
       this.idx = new RbushIndex<Obstacle>()
     } else {
@@ -50,7 +56,8 @@ export class ObstacleSpatialHashIndex {
 
     // bulk-load initial obstacles
     obstacles.forEach((o) => this.insert(o))
-    if (implementation === "flatbush") this.idx.finish?.()
+    if (implementation === "flatbush" && obstacles.length > 0)
+      this.idx.finish?.()
   }
 
   insert(o: Obstacle) {

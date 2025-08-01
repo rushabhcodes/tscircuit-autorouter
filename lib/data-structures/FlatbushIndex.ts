@@ -5,9 +5,11 @@ export class FlatbushIndex<T> implements ISpatialIndex<T> {
   private index: Flatbush
   private items: T[] = []
   private currentIndex = 0
+  private capacity: number
 
   constructor(numItems: number) {
-    this.index = new Flatbush(numItems)
+    this.capacity = Math.max(1, numItems)
+    this.index = new Flatbush(this.capacity)
   }
 
   insert(item: T, minX: number, minY: number, maxX: number, maxY: number) {
@@ -30,6 +32,7 @@ export class FlatbushIndex<T> implements ISpatialIndex<T> {
 
   clear() {
     this.items = []
-    this.index = new Flatbush(0)
+    this.currentIndex = 0
+    this.index = new Flatbush(this.capacity)
   }
 }
