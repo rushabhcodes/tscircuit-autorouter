@@ -31,47 +31,47 @@ Before we get into the nitty-gritty details, you should understand the high-leve
 
 ### Stage 1: Create a minimum spanning tree
 
-[Net to Point Pairs Video](https://share.cleanshot.com/GYFNck1D)
+[Net to Point Pairs Video](https://www.youtube.com/watch?v=WoRkDKvug_k&t=121)
 
 ### Stage 2: Construct the Node Mesh
 
 What we call the `nodeSolver` because it creates `CapacityMeshNode`s that represent where
 
-[Node Mesh Part 1](https://share.cleanshot.com/Tw8XJ0Qy)
-[Node Mesh Part 2](https://share.cleanshot.com/p0HNy5Bv)
+[Node Mesh Part 1](https://www.youtube.com/watch?v=WoRkDKvug_k&t=490)  
+[Node Mesh Part 2](https://www.youtube.com/watch?v=WoRkDKvug_k&t=1091)
 
 ### Stage 3-4: Simplify the Node Mesh (Strawing)
 
-[Simplify Node Mesh, Straw Solving](https://share.cleanshot.com/TX7XsBqk)
+[Simplify Node Mesh, Straw Solving](https://www.youtube.com/watch?v=WoRkDKvug_k&t=1191)
 
 ### Stage 5: Solve for Mesh edges
 
-[Solving for Mesh Edges](https://share.cleanshot.com/q7QbnKxJ)
+[Solving for Mesh Edges](https://www.youtube.com/watch?v=WoRkDKvug_k&t=1572)
 
 ### Stage 6: More mesh optimization (removing dead ends)
 
-[Dead End Solver](https://share.cleanshot.com/LTgVVcF6)
+[Dead End Solver](https://www.youtube.com/watch?v=WoRkDKvug_k&t=2007)
 
 ### Stage 7: Solve for initial "High Level Planning" routes
 
-[Initial Node Pathing Solver Part 1 (overview)](https://share.cleanshot.com/SB7rcsw4)
-[Initial Node Pathing Solver Part 2 (code walkthrough)](https://share.cleanshot.com/zQGHS33R)
+[Initial Node Pathing Solver Part 1 (overview)](https://www.youtube.com/watch?v=WoRkDKvug_k&t=2189)  
+[Initial Node Pathing Solver Part 2 (code walkthrough)](https://www.youtube.com/watch?v=WoRkDKvug_k&t=3000)
 
 ### Stage 8: Optimize high level path plans
 
-[Optimizing High Level Path Plans](https://share.cleanshot.com/zQGHS33R)
+[Optimizing High Level Path Plans](https://www.youtube.com/watch?v=WoRkDKvug_k&t=3000)
 
 ### Stage 9-10: Find the initial physical entry/exit points into high-level nodes
 
-[Finding the exact entry/exit points for traces in capacity nodes](https://share.cleanshot.com/ZnZlNyWd)
+[Finding the exact entry/exit points for traces in capacity nodes](https://www.youtube.com/watch?v=WoRkDKvug_k&t=3240)
 
 ### Stage 11: Unraveling: Optimize the physical entry/exit points to minimize crossings
 
-[Unravel Autorouting Phase](https://share.cleanshot.com/HqM4K9PF)
+[Unravel Autorouting Phase](https://www.youtube.com/watch?v=WoRkDKvug_k&t=3225)
 
 ### Stage 12: Solve for physical routes within each node
 
-[The High Density Phase](https://share.cleanshot.com/V0GLLcz9)
+[The High Density Phase](https://www.youtube.com/watch?v=WoRkDKvug_k&t=3885)
 
 This is by far the most complicated stage, and it's also "autorouting" in the
 truest most traditional definition. In this stage, we're figuring out how to
@@ -97,15 +97,15 @@ Coming soon!
 
 ### Stage 13: Combine physical paths together (Stitching)
 
-[The Stitch Phase](https://share.cleanshot.com/MbMDNNvc)
+[The Stitch Phase](https://www.youtube.com/watch?v=WoRkDKvug_k&t=4446)
 
 ### Stage 14, 16: Remove useless vias
 
-[Remove Useless Vias Stage](https://share.cleanshot.com/ckgNBSZK)
+[Remove Useless Vias Stage](https://www.youtube.com/watch?v=WoRkDKvug_k&t=4520)
 
 ### Stage 15, 17: Simplify Physical Paths
 
-[Simplify Physical Paths Stage](https://share.cleanshot.com/qPDZ7Bz4)
+[Simplify Physical Paths Stage](https://www.youtube.com/watch?v=WoRkDKvug_k&t=4781)
 
 ## Advanced Concepts
 
