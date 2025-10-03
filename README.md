@@ -58,6 +58,7 @@ interface SimpleRouteJson {
   obstacles: Obstacle[]
   connections: Array<SimpleRouteConnection>
   bounds: { minX: number; maxX: number; minY: number; maxY: number }
+  outline?: Array<{ x: number; y: number }>
   traces?: SimplifiedPcbTraces // Optional for input
 }
 

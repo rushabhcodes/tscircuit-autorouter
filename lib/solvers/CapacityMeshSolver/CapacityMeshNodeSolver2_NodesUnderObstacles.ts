@@ -1,5 +1,4 @@
 import type { GraphicsObject } from "graphics-debug"
-import { BaseSolver } from "../BaseSolver"
 import type {
   CapacityMeshEdge,
   CapacityMeshNode,
@@ -12,6 +11,10 @@ import { isPointInRect } from "lib/utils/isPointInRect"
 import { doRectsOverlap } from "lib/utils/doRectsOverlap"
 import { CapacityMeshNodeSolver } from "./CapacityMeshNodeSolver1"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
+import {
+  isRectCompletelyInsidePolygon,
+  isRectOverlappingPolygon,
+} from "@tscircuit/math-utils"
 
 interface CapacityMeshNodeSolverOptions {
   capacityDepth?: number
@@ -36,21 +39,61 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
   }
 
   isNodeCompletelyOutsideBounds(node: CapacityMeshNode): boolean {
-    return (
-      node.center.x + node.width / 2 < this.srj.bounds.minX ||
-      node.center.x - node.width / 2 > this.srj.bounds.maxX ||
-      node.center.y + node.height / 2 < this.srj.bounds.minY ||
-      node.center.y - node.height / 2 > this.srj.bounds.maxY
-    )
+    const nodeBounds = this.getNodeBounds(node)
+
+    if (
+      nodeBounds.maxX < this.srj.bounds.minX ||
+      nodeBounds.minX > this.srj.bounds.maxX ||
+      nodeBounds.maxY < this.srj.bounds.minY ||
+      nodeBounds.minY > this.srj.bounds.maxY
+    ) {
+      return true
+    }
+
+    if (this.srj.outline?.length) {
+      const polygon = this.srj.outline
+      const overlapsOutline = isRectOverlappingPolygon(
+        this.getNodeRect(node),
+        polygon,
+      )
+      if (!overlapsOutline) {
+        return true
+      }
+    }
+
+    return false
   }
 
   isNodePartiallyOutsideBounds(node: CapacityMeshNode): boolean {
-    return (
-      node.center.x - node.width / 2 < this.srj.bounds.minX ||
-      node.center.x + node.width / 2 > this.srj.bounds.maxX ||
-      node.center.y - node.height / 2 < this.srj.bounds.minY ||
-      node.center.y + node.height / 2 > this.srj.bounds.maxY
-    )
+    const nodeBounds = this.getNodeBounds(node)
+
+    if (
+      nodeBounds.minX < this.srj.bounds.minX ||
+      nodeBounds.maxX > this.srj.bounds.maxX ||
+      nodeBounds.minY < this.srj.bounds.minY ||
+      nodeBounds.maxY > this.srj.bounds.maxY
+    ) {
+      return true
+    }
+
+    if (this.srj.outline?.length) {
+      const polygon = this.srj.outline
+      const nodeRect = this.getNodeRect(node)
+      const overlapsOutline = isRectOverlappingPolygon(nodeRect, polygon)
+      if (!overlapsOutline) {
+        return true
+      }
+
+      const completelyInsideOutline = isRectCompletelyInsidePolygon(
+        nodeRect,
+        polygon,
+      )
+      if (!completelyInsideOutline) {
+        return true
+      }
+    }
+
+    return false
   }
   createChildNodeAtPosition(
     parent: CapacityMeshNode,

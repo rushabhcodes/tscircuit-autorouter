@@ -14,6 +14,10 @@ import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
 import { getTunedTotalCapacity1 } from "lib/utils/getTunedTotalCapacity1"
 import { ObstacleSpatialHashIndex } from "lib/data-structures/ObstacleTree"
 import { TargetTree } from "lib/data-structures/TargetTree"
+import {
+  isRectCompletelyInsidePolygon,
+  isRectOverlappingPolygon,
+} from "@tscircuit/math-utils"
 
 interface CapacityMeshNodeSolverOptions {
   capacityDepth?: number
@@ -145,6 +149,23 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     return `cn${this._nextNodeCounter++}`
   }
 
+  protected getNodeBounds(node: CapacityMeshNode) {
+    return {
+      minX: node.center.x - node.width / 2,
+      maxX: node.center.x + node.width / 2,
+      minY: node.center.y - node.height / 2,
+      maxY: node.center.y + node.height / 2,
+    }
+  }
+
+  protected getNodeRect(node: CapacityMeshNode) {
+    return {
+      center: { x: node.center.x, y: node.center.y },
+      width: node.width,
+      height: node.height,
+    }
+  }
+
   getCapacityFromDepth(depth: number): number {
     return (this.MAX_DEPTH - depth + 1) ** 2
   }
@@ -266,19 +287,34 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     }
 
     // Compute node bounds
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
+    const nodeBounds = this.getNodeBounds(node)
+    const nodeRect = this.getNodeRect(node)
 
     // If node is outside the bounds, we consider it to contain an obstacle
     if (
-      nodeLeft < this.srj.bounds.minX ||
-      nodeRight > this.srj.bounds.maxX ||
-      nodeTop < this.srj.bounds.minY ||
-      nodeBottom > this.srj.bounds.maxY
+      nodeBounds.minX < this.srj.bounds.minX ||
+      nodeBounds.maxX > this.srj.bounds.maxX ||
+      nodeBounds.minY < this.srj.bounds.minY ||
+      nodeBounds.maxY > this.srj.bounds.maxY
     ) {
       return true
+    }
+
+    if (this.srj.outline?.length) {
+      const polygon = this.srj.outline
+      const overlapsOutline = isRectOverlappingPolygon(nodeRect, polygon)
+      if (!overlapsOutline) {
+        return true
+      }
+
+      const completelyInsideOutline = isRectCompletelyInsidePolygon(
+        nodeRect,
+        polygon,
+      )
+
+      if (!completelyInsideOutline) {
+        return true
+      }
     }
     return false
   }
@@ -290,10 +326,8 @@ export class CapacityMeshNodeSolver extends BaseSolver {
     const overlappingObstacles = this.getXYZOverlappingObstacles(node)
 
     // Compute node bounds
-    const nodeLeft = node.center.x - node.width / 2
-    const nodeRight = node.center.x + node.width / 2
-    const nodeTop = node.center.y - node.height / 2
-    const nodeBottom = node.center.y + node.height / 2
+    const nodeBounds = this.getNodeBounds(node)
+    const nodeRect = this.getNodeRect(node)
 
     for (const obstacle of overlappingObstacles) {
       const obsLeft = obstacle.center.x - obstacle.width / 2
@@ -303,23 +337,31 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
       // Check if the node's bounds are completely inside the obstacle's bounds.
       if (
-        nodeLeft >= obsLeft &&
-        nodeRight <= obsRight &&
-        nodeTop >= obsTop &&
-        nodeBottom <= obsBottom
+        nodeBounds.minX >= obsLeft &&
+        nodeBounds.maxX <= obsRight &&
+        nodeBounds.minY >= obsTop &&
+        nodeBounds.maxY <= obsBottom
       ) {
         return true
       }
     }
 
-    // if (
-    //   nodeRight < this.srj.bounds.minX ||
-    //   nodeLeft > this.srj.bounds.maxX ||
-    //   nodeBottom < this.srj.bounds.minY ||
-    //   nodeTop > this.srj.bounds.maxY
-    // ) {
-    //   return true
-    // }
+    if (
+      nodeBounds.maxX < this.srj.bounds.minX ||
+      nodeBounds.minX > this.srj.bounds.maxX ||
+      nodeBounds.maxY < this.srj.bounds.minY ||
+      nodeBounds.minY > this.srj.bounds.maxY
+    ) {
+      return true
+    }
+
+    if (this.srj.outline?.length) {
+      const polygon = this.srj.outline
+      const overlapsOutline = isRectOverlappingPolygon(nodeRect, polygon)
+      if (!overlapsOutline) {
+        return true
+      }
+    }
 
     return false
   }
