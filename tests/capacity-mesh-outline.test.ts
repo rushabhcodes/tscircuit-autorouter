@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { CapacityMeshNode } from "../lib/types"
 import { CapacityMeshNodeSolver } from "../lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver1"
 import { CapacityMeshNodeSolver2_NodeUnderObstacle } from "../lib/solvers/CapacityMeshSolver/CapacityMeshNodeSolver2_NodesUnderObstacles"
-import { createSimpleRouteJsonWithOutline } from "./fixtures/simple-route-json-with-outline"
+import { createSimpleRouteJsonWithOutline } from "./capacity-mesh-outline.fixture"
 
 const baseSrj = createSimpleRouteJsonWithOutline()
 

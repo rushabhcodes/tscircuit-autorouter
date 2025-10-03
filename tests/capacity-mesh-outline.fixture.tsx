@@ -1,4 +1,4 @@
-import type { SimpleRouteJson } from "../../lib/types"
+import type { SimpleRouteJson } from "../lib/types"
 
 export const squareOutline: Array<{ x: number; y: number }> = [
   { x: 1, y: 1 },
