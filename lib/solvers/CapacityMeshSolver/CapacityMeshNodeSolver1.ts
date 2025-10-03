@@ -480,9 +480,18 @@ export class CapacityMeshNodeSolver extends BaseSolver {
 
       graphics.lines!.push({
         points: outlinePoints,
-        strokeColor: "rgba(0,120,255,0.8)",
-        strokeWidth: 1.5,
+        strokeColor: "rgba(0, 136, 255, 0.95)",
+        strokeWidth: 0.35,
+        label: "outline",
       })
+
+      for (const point of this.outlinePolygon) {
+        graphics.points!.push({
+          x: point.x,
+          y: point.y,
+          color: "rgba(0, 136, 255, 0.95)",
+        })
+      }
     }
 
     // Draw obstacles
