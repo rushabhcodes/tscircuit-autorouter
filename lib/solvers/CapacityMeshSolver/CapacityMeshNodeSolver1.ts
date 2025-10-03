@@ -469,6 +469,22 @@ export class CapacityMeshNodeSolver extends BaseSolver {
       title: "Capacity Mesh Visualization",
     }
 
+    // Draw outline polygon if provided
+    if (this.outlinePolygon && this.outlinePolygon.length >= 2) {
+      const outlinePoints = this.outlinePolygon.map((point) => ({
+        x: point.x,
+        y: point.y,
+      }))
+
+      outlinePoints.push({ ...outlinePoints[0]! })
+
+      graphics.lines!.push({
+        points: outlinePoints,
+        strokeColor: "rgba(0,120,255,0.8)",
+        strokeWidth: 1.5,
+      })
+    }
+
     // Draw obstacles
     for (const obstacle of this.srj.obstacles) {
       graphics.rects!.push({

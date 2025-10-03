@@ -16,28 +16,30 @@ const simpleRouteJson: SimpleRouteJson = {
   ],
   connections: [
     {
-      name: "conn-top",
+      name: "conn-left-arm",
       pointsToConnect: [
-        { x: -6, y: -4, layer: "top" },
-        { x: 6, y: -4, layer: "top" },
+        { x: -8, y: 8, layer: "top" },
+        { x: -8, y: 1.5, layer: "top" },
       ],
     },
     {
-      name: "conn-bottom",
+      name: "conn-right-arm",
       pointsToConnect: [
-        { x: -2, y: 4, layer: "bottom" },
-        { x: 2, y: 4, layer: "bottom" },
+        { x: 8, y: 8, layer: "bottom" },
+        { x: 8, y: 1.5, layer: "bottom" },
       ],
     },
   ],
   bounds: { minX: -12, maxX: 12, minY: -12, maxY: 12 },
   outline: [
-    { x: -10, y: -8 },
-    { x: 0, y: -10 },
-    { x: 10, y: -8 },
-    { x: 8, y: 8 },
-    { x: 0, y: 10 },
-    { x: -8, y: 8 },
+    { x: -10, y: 10 },
+    { x: -10, y: -10 },
+    { x: 10, y: -10 },
+    { x: 10, y: 10 },
+    { x: 4, y: 10 },
+    { x: 4, y: 0 },
+    { x: -4, y: 0 },
+    { x: -4, y: 10 },
   ],
 }
 
