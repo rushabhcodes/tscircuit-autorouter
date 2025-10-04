@@ -35,6 +35,17 @@ describe("bugreport8-e3ec95", () => {
       srj.minTraceWidth,
     )
 
+    const layersUsed = new Set(
+      circuitJson
+        .filter((e) => e.type === "pcb_trace")
+        .flatMap((t) => t.route)
+        .flatMap((r) =>
+          r.route_type === "via" ? [r.from_layer, r.to_layer] : [],
+        ),
+    )
+
+    expect(layersUsed.size).toBe(4)
+
     pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
   })
 
