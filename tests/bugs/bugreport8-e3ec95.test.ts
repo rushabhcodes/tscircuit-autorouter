@@ -1,19 +1,21 @@
 import { beforeAll, describe, expect, test } from "bun:test"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { CapacityMeshSolver } from "lib"
 import { convertToCircuitJson } from "lib/testing/utils/convertToCircuitJson"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
+import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../examples/bug-reports/bugreport8-e3ec95/bugreport8-e3ec95.json" assert {
   type: "json",
 }
-import type { SimpleRouteJson } from "lib/types"
+
+const srj = bugReport.simple_route_json as SimpleRouteJson
 
 describe("bugreport8-e3ec95", () => {
-  const srj = bugReport.simple_route_json as SimpleRouteJson
-
+  let solver: CapacityMeshSolver
+  let circuitJson: ReturnType<typeof convertToCircuitJson>
   let pcbSvg: string
 
   beforeAll(() => {
-    const solver = new CapacityMeshSolver(srj)
+    solver = new CapacityMeshSolver(srj)
     solver.solve()
 
     if (solver.failed || !solver.solved) {
@@ -27,7 +29,7 @@ describe("bugreport8-e3ec95", () => {
 
     const simplifiedTraces = solver.getOutputSimplifiedPcbTraces()
 
-    const circuitJson = convertToCircuitJson(
+    circuitJson = convertToCircuitJson(
       srjWithPointPairs,
       simplifiedTraces,
       srj.minTraceWidth,
