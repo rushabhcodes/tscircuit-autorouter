@@ -22,4 +22,4 @@
 
 ## Architecture
 
-The codebase follows a modular architecture with solvers handling different aspects of autorouting. The main export is the `CapacityMeshSolver` which orchestrates the routing process.
+The codebase follows a modular architecture with solvers handling different aspects of autorouting. The main export is the `AutoroutingPipelineSolver` which orchestrates the routing process and contains all the stages.
