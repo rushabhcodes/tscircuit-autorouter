@@ -38,7 +38,7 @@ export class CapacityPathingSolver extends BaseSolver {
   nodes: CapacityMeshNode[]
   edges: CapacityMeshEdge[]
   GREEDY_MULTIPLIER = 1.1
-  MAX_CANDIDATES_IN_MEMORY = 10_000
+  MAX_CANDIDATES_IN_MEMORY = 100_000
 
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   nodeEdgeMap: Map<CapacityMeshNodeId, CapacityMeshEdge[]>

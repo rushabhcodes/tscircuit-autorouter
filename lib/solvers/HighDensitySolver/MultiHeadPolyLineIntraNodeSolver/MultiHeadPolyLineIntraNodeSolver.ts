@@ -67,7 +67,7 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
     connMap?: ConnectivityMap
   }) {
     super()
-    this.MAX_ITERATIONS = 10e3
+    this.MAX_ITERATIONS = 100e3
     this.nodeWithPortPoints = params.nodeWithPortPoints
     this.colorMap =
       params.colorMap ??
@@ -161,7 +161,11 @@ export class MultiHeadPolyLineIntraNodeSolver extends BaseSolver {
       )
       for (let i = 0; i < path.length - 1; i++) {
         const segment: [MHPoint2, MHPoint2] = [path[i], path[i + 1]]
-        segmentsByLayer.get(segment[0].z2)!.push(segment)
+        const layer = segment[0].z2
+        if (!segmentsByLayer.has(layer)) {
+          segmentsByLayer.set(layer, [])
+        }
+        segmentsByLayer.get(layer)!.push(segment)
       }
       polyLineSegmentsByLayer.push(segmentsByLayer)
       polyLineVias.push(path.filter((p) => p.z1 !== p.z2))

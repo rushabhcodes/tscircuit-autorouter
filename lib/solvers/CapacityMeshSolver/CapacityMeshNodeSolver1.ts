@@ -90,7 +90,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         width: maxWidthHeight,
         height: maxWidthHeight,
         layer: "top",
-        availableZ: [0, 1],
+        availableZ: Array.from({ length: this.layerCount }, (_, i) => i),
         _depth: 0,
         _containsTarget: true,
         _containsObstacle: true,
@@ -114,7 +114,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         const obstacles = this.obstacleTree
           .searchArea(ptc.x, ptc.y, 0.01, 0.01)
           .filter((o) =>
-            o.zLayers!.some((z) => (ptc.layer === "top" ? z === 0 : z === 1)),
+            o.zLayers!.some((z) => z === mapLayerNameToZ(ptc.layer, this.layerCount)),
           )
 
         let bounds: {
@@ -139,7 +139,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         const target = {
           ...ptc,
           connectionName: conn.name,
-          availableZ: ptc.layer === "top" ? [0] : [1],
+          availableZ: [mapLayerNameToZ(ptc.layer, this.layerCount)],
           bounds,
         }
         targets.push(target)
@@ -389,7 +389,7 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         width: childNodeSize.width,
         height: childNodeSize.height,
         layer: parent.layer,
-        availableZ: [0, 1],
+        availableZ: parent.availableZ,
         _depth: (parent._depth ?? 0) + 1,
         _parent: parent,
       }

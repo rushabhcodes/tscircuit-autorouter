@@ -59,10 +59,12 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
   }
 
   computeAdjacentNodeIdsForFirstBatch(nodes: CapacityMeshNode[]) {
-    const nodeTrees = [
-      new CapacityNodeTree(nodes.filter((n) => n.availableZ[0] === 0)),
-      new CapacityNodeTree(nodes.filter((n) => n.availableZ[0] === 1)),
-    ]
+    // Determine max layer from all nodes
+    const maxLayer = Math.max(...nodes.map((n) => Math.max(...n.availableZ)))
+    const nodeTrees: CapacityNodeTree[] = []
+    for (let i = 0; i <= maxLayer; i++) {
+      nodeTrees.push(new CapacityNodeTree(nodes.filter((n) => n.availableZ[0] === i)))
+    }
     for (const node of nodes) {
       const adjacentNodes: CapacityMeshNode[] = []
       const z = node.availableZ[0]

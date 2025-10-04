@@ -6,7 +6,6 @@ import type { SimpleRouteJson } from "lib/types"
 import bugReport from "../../examples/bug-reports/bugreport8-e3ec95/bugreport8-e3ec95.json" assert {
   type: "json",
 }
-
 const srj = bugReport.simple_route_json as SimpleRouteJson
 
 describe("bugreport8-e3ec95", () => {
@@ -14,7 +13,7 @@ describe("bugreport8-e3ec95", () => {
   let circuitJson: ReturnType<typeof convertToCircuitJson>
   let pcbSvg: string
 
-  beforeAll(() => {
+  test("matches expected PCB snapshot", () => {
     solver = new CapacityMeshSolver(srj)
     solver.solve()
 
@@ -47,9 +46,6 @@ describe("bugreport8-e3ec95", () => {
     expect(layersUsed.size).toBe(4)
 
     pcbSvg = convertCircuitJsonToPcbSvg(circuitJson)
-  })
-
-  test("matches expected PCB snapshot", () => {
     expect(pcbSvg).toMatchSvgSnapshot(import.meta.path)
   })
 })
