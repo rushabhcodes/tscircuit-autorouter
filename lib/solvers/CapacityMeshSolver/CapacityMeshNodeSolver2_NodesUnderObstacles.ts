@@ -199,10 +199,8 @@ export class CapacityMeshNodeSolver2_NodeUnderObstacle extends CapacityMeshNodeS
 
     const childNodes: CapacityMeshNode[] = []
 
-    // TODO when we have more than 2 layers, we need to handle other
-    // variations, you always want to prioritize having larger contiguous
-    // z-blocks
-    const otherZBlocks = [[0], [1]]
+    // Split availableZ into individual layers
+    const otherZBlocks = node.availableZ.map((z) => [z])
 
     for (const zBlock of otherZBlocks) {
       const childNode = this.createChildNodeAtPosition(node, {
