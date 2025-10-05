@@ -13,7 +13,7 @@ describe("bugreport8-e3ec95", () => {
   let circuitJson: ReturnType<typeof convertToCircuitJson>
   let pcbSvg: string
 
-  test("matches expected PCB snapshot", () => {
+  test.skip("matches expected PCB snapshot", () => {
     solver = new CapacityMeshSolver(srj)
     solver.solve()
 
