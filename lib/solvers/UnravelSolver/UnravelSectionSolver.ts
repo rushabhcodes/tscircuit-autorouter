@@ -26,6 +26,38 @@ import {
 } from "./createSegmentPointMap"
 import { calculateNodeProbabilityOfFailure } from "./calculateCrossingProbabilityOfFailure"
 import { PointModificationsMap } from "./types"
+import {
+  getAlternativeLayersForSegment,
+  getCommonAvailableLayers,
+} from "./getLayerOptions"
+
+const segmentPointIdsMatch = (a: SegmentPointId[], b: SegmentPointId[]) => {
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((value, index) => value === sortedB[index])
+}
+
+const addUniqueChangeLayerOperation = (
+  operations: UnravelOperation[],
+  segmentPointIds: SegmentPointId[],
+  newZ: number,
+) => {
+  const exists = operations.some(
+    (operation) =>
+      operation.type === "change_layer" &&
+      operation.newZ === newZ &&
+      segmentPointIdsMatch(operation.segmentPointIds, segmentPointIds),
+  )
+
+  if (!exists) {
+    operations.push({
+      type: "change_layer",
+      newZ,
+      segmentPointIds: [...segmentPointIds],
+    })
+  }
+}
 
 export interface UnravelSectionHyperParameters {
   MAX_ITERATIONS_WITHOUT_IMPROVEMENT: number
@@ -442,76 +474,52 @@ export class UnravelSectionSolver extends BaseSolver {
       const cSegment = this.dedupedSegmentMap.get(C.segmentId)!
       const dSegment = this.dedupedSegmentMap.get(D.segmentId)!
 
-      // Function to check if a new Z level is available for all segments
-      const isNewZAvailableForAll = (segmentObjects: any[], newZ: number) => {
-        return segmentObjects.every((seg) => seg.availableZ.includes(newZ))
-      }
+      const line1CurrentLayers = new Set([A.z, B.z])
+      const line1SharedLayers = getCommonAvailableLayers([
+        aSegment,
+        bSegment,
+      ]).filter((layer) => !line1CurrentLayers.has(layer))
 
-      // Only propose layer changes if both segments can use the target layer
       if (AIsMutable && BIsMutable) {
-        const newZ = A.z === 0 ? 1 : 0
-        if (isNewZAvailableForAll([aSegment, bSegment], newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [APointId, BPointId],
-          })
+        for (const newZ of line1SharedLayers) {
+          addUniqueChangeLayerOperation(operations, [APointId, BPointId], newZ)
         }
       }
 
+      const line2CurrentLayers = new Set([C.z, D.z])
+      const line2SharedLayers = getCommonAvailableLayers([
+        cSegment,
+        dSegment,
+      ]).filter((layer) => !line2CurrentLayers.has(layer))
+
       if (CIsMutable && DIsMutable) {
-        const newZ = C.z === 0 ? 1 : 0
-        if (isNewZAvailableForAll([cSegment, dSegment], newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [CPointId, DPointId],
-          })
+        for (const newZ of line2SharedLayers) {
+          addUniqueChangeLayerOperation(operations, [CPointId, DPointId], newZ)
         }
       }
 
       // 3. CHANGE LAYER OF EACH POINT INDIVIDUALLY TO MAKE TRANSITION CROSSING
       if (AIsMutable) {
-        const newZ = A.z === 0 ? 1 : 0
-        if (aSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [APointId],
-          })
+        for (const newZ of getAlternativeLayersForSegment(aSegment, [A.z])) {
+          addUniqueChangeLayerOperation(operations, [APointId], newZ)
         }
       }
 
       if (BIsMutable) {
-        const newZ = B.z === 0 ? 1 : 0
-        if (bSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [BPointId],
-          })
+        for (const newZ of getAlternativeLayersForSegment(bSegment, [B.z])) {
+          addUniqueChangeLayerOperation(operations, [BPointId], newZ)
         }
       }
 
       if (CIsMutable) {
-        const newZ = C.z === 0 ? 1 : 0
-        if (cSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [CPointId],
-          })
+        for (const newZ of getAlternativeLayersForSegment(cSegment, [C.z])) {
+          addUniqueChangeLayerOperation(operations, [CPointId], newZ)
         }
       }
 
       if (DIsMutable) {
-        const newZ = D.z === 0 ? 1 : 0
-        if (dSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [DPointId],
-          })
+        for (const newZ of getAlternativeLayersForSegment(dSegment, [D.z])) {
+          addUniqueChangeLayerOperation(operations, [DPointId], newZ)
         }
       }
     }

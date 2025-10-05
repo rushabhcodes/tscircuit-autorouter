@@ -23,6 +23,19 @@ import { getIntraNodeCrossingsFromSegmentPoints } from "lib/utils/getIntraNodeCr
 import { getNodesNearNode } from "./getNodesNearNode"
 import { CacheProvider } from "lib/cache/types"
 
+const LAYER_STROKE_DASH: Array<string | undefined> = [
+  undefined,
+  "10 5",
+  "5 5",
+  "2 6",
+  "15 3 3 3",
+]
+
+const getStrokeDashForLayer = (layer: number): string | undefined => {
+  if (!Number.isFinite(layer)) return undefined
+  return LAYER_STROKE_DASH[layer] ?? "4 4"
+}
+
 export class UnravelMultiSectionSolver extends BaseSolver {
   nodeMap: Map<CapacityMeshNodeId, CapacityMeshNode>
   dedupedSegmentMap: Map<SegmentId, SegmentWithAssignedPoints>
@@ -375,7 +388,7 @@ export class UnravelMultiSectionSolver extends BaseSolver {
 
           let strokeDash: string | undefined
           if (sameLayer) {
-            strokeDash = layer === 0 ? undefined : "10 5" // Solid for layer 0, long dash for other layers
+            strokeDash = getStrokeDashForLayer(layer)
           } else {
             strokeDash = "3 3 10" // Mixed dash for transitions between layers
           }
