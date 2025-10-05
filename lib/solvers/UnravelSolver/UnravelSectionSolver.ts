@@ -353,6 +353,69 @@ export class UnravelSectionSolver extends BaseSolver {
     issue: UnravelIssue,
   ): UnravelOperation[] {
     const operations: UnravelOperation[] = []
+    const seenOperations = new Set<string>()
+
+    const addOperation = (operation: UnravelOperation) => {
+      const key = JSON.stringify(operation)
+      if (seenOperations.has(key)) return
+      seenOperations.add(key)
+      operations.push(operation)
+    }
+
+    const getCommonAlternativeLayers = (
+      segments: SegmentWithAssignedPoints[],
+      currentLayers: number[],
+    ): number[] => {
+      if (segments.length === 0) return []
+      let commonLayers = new Set<number>(segments[0].availableZ)
+      for (const segment of segments.slice(1)) {
+        const next = new Set<number>()
+        for (const layer of segment.availableZ) {
+          if (commonLayers.has(layer)) {
+            next.add(layer)
+          }
+        }
+        commonLayers = next
+      }
+      const currentLayerSet = new Set(currentLayers)
+      return Array.from(commonLayers).filter(
+        (layer) => !currentLayerSet.has(layer),
+      )
+    }
+
+    const addChangeLayerOperations = (
+      segmentPointIds: SegmentPointId[],
+      segments: SegmentWithAssignedPoints[],
+      currentLayers: number[],
+    ) => {
+      const alternativeLayers = getCommonAlternativeLayers(
+        segments,
+        currentLayers,
+      )
+      for (const newZ of alternativeLayers) {
+        addOperation({
+          type: "change_layer",
+          newZ,
+          segmentPointIds,
+        })
+      }
+    }
+
+    const addChangeLayerOperationsForSinglePoint = (
+      segmentPointId: SegmentPointId,
+      segment: SegmentWithAssignedPoints,
+      currentLayer: number,
+    ) => {
+      const uniqueLayers = new Set(segment.availableZ)
+      uniqueLayers.delete(currentLayer)
+      for (const newZ of uniqueLayers) {
+        addOperation({
+          type: "change_layer",
+          newZ,
+          segmentPointIds: [segmentPointId],
+        })
+      }
+    }
 
     if (issue.type === "transition_via") {
       // When there's a transition via, we attempt to change the layer of either
@@ -372,7 +435,7 @@ export class UnravelSectionSolver extends BaseSolver {
         this.unravelSection.mutableSegmentPointIds.has(APointId) &&
         aAvailableZ.includes(pointB.z)
       ) {
-        operations.push({
+        addOperation({
           type: "change_layer",
           newZ: pointB.z,
           segmentPointIds: [APointId],
@@ -382,7 +445,7 @@ export class UnravelSectionSolver extends BaseSolver {
         this.unravelSection.mutableSegmentPointIds.has(BPointId) &&
         bAvailableZ.includes(pointA.z)
       ) {
-        operations.push({
+        addOperation({
           type: "change_layer",
           newZ: pointA.z,
           segmentPointIds: [BPointId],
@@ -430,7 +493,7 @@ export class UnravelSectionSolver extends BaseSolver {
       }
 
       for (const [EPointId, FPointId] of sharedSegments) {
-        operations.push({
+        addOperation({
           type: "swap_position_on_segment",
           segmentPointIds: [EPointId, FPointId],
         })
@@ -442,77 +505,38 @@ export class UnravelSectionSolver extends BaseSolver {
       const cSegment = this.dedupedSegmentMap.get(C.segmentId)!
       const dSegment = this.dedupedSegmentMap.get(D.segmentId)!
 
-      // Function to check if a new Z level is available for all segments
-      const isNewZAvailableForAll = (segmentObjects: any[], newZ: number) => {
-        return segmentObjects.every((seg) => seg.availableZ.includes(newZ))
-      }
-
       // Only propose layer changes if both segments can use the target layer
       if (AIsMutable && BIsMutable) {
-        const newZ = A.z === 0 ? 1 : 0
-        if (isNewZAvailableForAll([aSegment, bSegment], newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [APointId, BPointId],
-          })
-        }
+        addChangeLayerOperations(
+          [APointId, BPointId],
+          [aSegment, bSegment],
+          [A.z, B.z],
+        )
       }
 
       if (CIsMutable && DIsMutable) {
-        const newZ = C.z === 0 ? 1 : 0
-        if (isNewZAvailableForAll([cSegment, dSegment], newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [CPointId, DPointId],
-          })
-        }
+        addChangeLayerOperations(
+          [CPointId, DPointId],
+          [cSegment, dSegment],
+          [C.z, D.z],
+        )
       }
 
       // 3. CHANGE LAYER OF EACH POINT INDIVIDUALLY TO MAKE TRANSITION CROSSING
       if (AIsMutable) {
-        const newZ = A.z === 0 ? 1 : 0
-        if (aSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [APointId],
-          })
-        }
+        addChangeLayerOperationsForSinglePoint(APointId, aSegment, A.z)
       }
 
       if (BIsMutable) {
-        const newZ = B.z === 0 ? 1 : 0
-        if (bSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [BPointId],
-          })
-        }
+        addChangeLayerOperationsForSinglePoint(BPointId, bSegment, B.z)
       }
 
       if (CIsMutable) {
-        const newZ = C.z === 0 ? 1 : 0
-        if (cSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [CPointId],
-          })
-        }
+        addChangeLayerOperationsForSinglePoint(CPointId, cSegment, C.z)
       }
 
       if (DIsMutable) {
-        const newZ = D.z === 0 ? 1 : 0
-        if (dSegment.availableZ.includes(newZ)) {
-          operations.push({
-            type: "change_layer",
-            newZ,
-            segmentPointIds: [DPointId],
-          })
-        }
+        addChangeLayerOperationsForSinglePoint(DPointId, dSegment, D.z)
       }
     }
 
