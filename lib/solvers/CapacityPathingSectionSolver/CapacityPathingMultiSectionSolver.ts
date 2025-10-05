@@ -91,13 +91,33 @@ export class CapacityPathingMultiSectionSolver extends BaseSolver {
     },
     {
       MAX_ATTEMPTS_PER_NODE: 2,
-      MAX_EXPANSION_DEGREES: 5,
-      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.2,
+      MAX_EXPANSION_DEGREES: 7,
+      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.08,
     },
     {
       MAX_ATTEMPTS_PER_NODE: 3,
-      MAX_EXPANSION_DEGREES: 7,
-      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.9,
+      MAX_EXPANSION_DEGREES: 11,
+      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.12,
+    },
+    {
+      MAX_ATTEMPTS_PER_NODE: 4,
+      MAX_EXPANSION_DEGREES: 15,
+      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.2,
+    },
+    {
+      MAX_ATTEMPTS_PER_NODE: 6,
+      MAX_EXPANSION_DEGREES: 21,
+      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.3,
+    },
+    {
+      MAX_ATTEMPTS_PER_NODE: 8,
+      MAX_EXPANSION_DEGREES: 27,
+      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.4,
+    },
+    {
+      MAX_ATTEMPTS_PER_NODE: 10,
+      MAX_EXPANSION_DEGREES: Number.POSITIVE_INFINITY,
+      MINIMUM_PROBABILITY_OF_FAILURE_TO_OPTIMIZE: 0.5,
     },
   ]
 
@@ -283,6 +303,10 @@ export class CapacityPathingMultiSectionSolver extends BaseSolver {
       })
       this.stats.scheduleScores[this.currentScheduleIndex].sectionAttempts++
       this.currentSection = section
+      const shouldBypassCache =
+        this.currentScheduleIndex >= 4 ||
+        this.currentSchedule.MAX_EXPANSION_DEGREES >= 21
+
       this.sectionSolver = new CachedHyperCapacityPathingSingleSectionSolver({
         sectionNodes: this.currentSection.sectionNodes,
         sectionEdges: this.currentSection.sectionEdges,
@@ -294,7 +318,7 @@ export class CapacityPathingMultiSectionSolver extends BaseSolver {
         hyperParameters: {
           EXPANSION_DEGREES: this.currentSchedule.MAX_EXPANSION_DEGREES,
         },
-        cacheProvider: this.cacheProvider,
+        cacheProvider: shouldBypassCache ? null : this.cacheProvider,
       })
 
       this.activeSubSolver = this.sectionSolver

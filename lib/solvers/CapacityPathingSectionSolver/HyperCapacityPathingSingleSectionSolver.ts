@@ -79,7 +79,7 @@ export class HyperCapacityPathingSingleSectionSolver extends HyperParameterSuper
       },
       {
         name: "orderings30",
-        possibleValues: range(30).map((i) => ({
+        possibleValues: range(60).map((i) => ({
           SHUFFLE_SEED: i,
         })),
       },

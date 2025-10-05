@@ -31,7 +31,7 @@ export class MultiHeadPolyLineIntraNodeSolver3 extends MultiHeadPolyLineIntraNod
     params: ConstructorParameters<typeof MultiHeadPolyLineIntraNodeSolver2>[0],
   ) {
     super(params)
-    this.MAX_ITERATIONS = 1000
+    this.MAX_ITERATIONS = 60000
   }
 
   createInitialCandidateFromSeed(shuffleSeed: number): Candidate | null {

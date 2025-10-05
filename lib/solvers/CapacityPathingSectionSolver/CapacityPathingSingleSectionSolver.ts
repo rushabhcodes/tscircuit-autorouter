@@ -67,7 +67,7 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   centerNodeId: string
   private currentSectionScore: number = 0
 
-  MAX_CANDIDATES_IN_MEMORY = 10_000
+  MAX_CANDIDATES_IN_MEMORY = 25_000
 
   // A* state
   currentConnectionIndex = 0
@@ -90,7 +90,7 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
   constructor(params: CapacityPathingSingleSectionPathingSolverParams) {
     super()
 
-    this.MAX_ITERATIONS = 10e3
+    this.MAX_ITERATIONS = 40e3
     this.centerNodeId = params.centerNodeId
     this.sectionNodes = params.sectionNodes
     this.sectionEdges = params.sectionEdges
@@ -150,9 +150,9 @@ export class CapacityPathingSingleSectionSolver extends BaseSolver {
     /**
      * Roughly, -1 remaining capacity is penalized to this much distance
      */
-    const mmPenaltyFactor = 4
+    const mmPenaltyFactor = 12
 
-    const MIN_PENALTY = 0.05
+    const MIN_PENALTY = 0.2
 
     const totalCapacity = this.getTotalCapacity(node)
     const usedCapacity =
