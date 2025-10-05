@@ -63,7 +63,9 @@ export class SingleLayerNodeMergerSolver extends BaseSolver {
     const maxLayer = Math.max(...nodes.map((n) => Math.max(...n.availableZ)))
     const nodeTrees: CapacityNodeTree[] = []
     for (let i = 0; i <= maxLayer; i++) {
-      nodeTrees.push(new CapacityNodeTree(nodes.filter((n) => n.availableZ[0] === i)))
+      nodeTrees.push(
+        new CapacityNodeTree(nodes.filter((n) => n.availableZ[0] === i)),
+      )
     }
     for (const node of nodes) {
       const adjacentNodes: CapacityMeshNode[] = []

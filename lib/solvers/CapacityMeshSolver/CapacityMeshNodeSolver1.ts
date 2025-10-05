@@ -114,7 +114,9 @@ export class CapacityMeshNodeSolver extends BaseSolver {
         const obstacles = this.obstacleTree
           .searchArea(ptc.x, ptc.y, 0.01, 0.01)
           .filter((o) =>
-            o.zLayers!.some((z) => z === mapLayerNameToZ(ptc.layer, this.layerCount)),
+            o.zLayers!.some(
+              (z) => z === mapLayerNameToZ(ptc.layer, this.layerCount),
+            ),
           )
 
         let bounds: {
