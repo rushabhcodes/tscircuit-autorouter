@@ -23,6 +23,7 @@ export interface Obstacle {
 export interface SimpleRouteConnection {
   name: string
   netConnectionName?: string
+  nominalTraceWidth?: number
   pointsToConnect: Array<{
     x: number
     y: number
