@@ -6,6 +6,8 @@ import {
 } from "../AutoroutingPipelineSolver"
 import { areViasPresent } from "./areViasPresent"
 import { ObstacleAssignmentSolver } from "./ObstacleAssignmentSolver"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import type { GraphicsObject } from "graphics-debug"
 
 interface LoopedReassignmentZeroViaSolverOptions
   extends AutoroutingPipelineSolverOptions {}
@@ -22,6 +24,7 @@ interface LoopedReassignmentZeroViaSolverOptions
  * 4. Repeat steps 2 and 3 until the problem is solved with zero vias
  */
 export class LoopedReassignmentZeroViaSolver extends BaseSolver {
+  MAX_ITERATIONS = 10e6
   inputSrj: SimpleRouteJson
   srjWithObstacleAssignments: SimpleRouteJson
   opts: LoopedReassignmentZeroViaSolverOptions
@@ -51,7 +54,7 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
   _step() {
     if (!this.activeSubSolver) {
       this.activeSubSolver = new AutoroutingPipelineSolver(
-        this.inputSrj,
+        this.srjWithObstacleAssignments,
         this.opts,
       )
       return
@@ -82,8 +85,56 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
         return
       }
       this.solved = true
+    } else if (
+      this.activeSubSolver.constructor.name === "ObstacleAssignmentSolver" &&
+      this.activeSubSolver.solved
+    ) {
+      const assignmentSolver = this.activeSubSolver as ObstacleAssignmentSolver
+      this.srjWithObstacleAssignments = assignmentSolver.getOutputSrj()
+      // Start a new pipeline solver with the updated obstacle assignments
+      this.activeSubSolver = new AutoroutingPipelineSolver(
+        this.srjWithObstacleAssignments,
+        this.opts,
+      )
     } else if (this.activeSubSolver.failed) {
       this.failed = true
     }
+  }
+
+  visualize(): GraphicsObject {
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+    return convertSrjToGraphicsObject(this.inputSrj)
+  }
+
+  getOutputSimplifiedPcbTraces() {
+    if (!this.solved) {
+      throw new Error("LoopedReassignmentZeroViaSolver has not been solved yet")
+    }
+    if (
+      this.activeSubSolver &&
+      this.activeSubSolver.constructor.name === "AutoroutingPipelineSolver"
+    ) {
+      return (
+        this.activeSubSolver as AutoroutingPipelineSolver
+      ).getOutputSimplifiedPcbTraces()
+    }
+    throw new Error("No AutoroutingPipelineSolver available for output")
+  }
+
+  getOutputSimpleRouteJson(): SimpleRouteJson {
+    if (!this.solved) {
+      throw new Error("LoopedReassignmentZeroViaSolver has not been solved yet")
+    }
+    if (
+      this.activeSubSolver &&
+      this.activeSubSolver.constructor.name === "AutoroutingPipelineSolver"
+    ) {
+      return (
+        this.activeSubSolver as AutoroutingPipelineSolver
+      ).getOutputSimpleRouteJson()
+    }
+    throw new Error("No AutoroutingPipelineSolver available for output")
   }
 }

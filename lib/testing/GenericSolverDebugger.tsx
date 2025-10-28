@@ -11,6 +11,7 @@ interface GenericSolverDebuggerProps {
   animationSpeed?: number
   onSolverStarted?: (solver: BaseSolver) => void
   onSolverCompleted?: (solver: BaseSolver) => void
+  showDeepestVisualizationInitial?: boolean
 }
 
 export const GenericSolverDebugger = ({
@@ -18,6 +19,7 @@ export const GenericSolverDebugger = ({
   animationSpeed = 10,
   onSolverStarted,
   onSolverCompleted,
+  showDeepestVisualizationInitial = false,
 }: GenericSolverDebuggerProps) => {
   const [mainSolver, setMainSolver] = useState<BaseSolver>(() => createSolver())
   const [previewMode, setPreviewMode] = useState(false)
@@ -25,8 +27,9 @@ export const GenericSolverDebugger = ({
   const [forcedUpdates, setForceUpdate] = useState(0)
   const [isAnimating, setIsAnimating] = useState(false)
   const [speedLevel, setSpeedLevel] = useState(0)
-  const [showDeepestVisualization, setShowDeepestVisualization] =
-    useState(false)
+  const [showDeepestVisualization, setShowDeepestVisualization] = useState(
+    showDeepestVisualizationInitial,
+  )
   const [selectedSolverKey, setSelectedSolverKey] = useState<"main" | number>(
     "main",
   )
@@ -198,12 +201,15 @@ export const GenericSolverDebugger = ({
         }
       }
 
-      // Now step until the subsolver completes (something -> null)
+      const initialSubSolverName = mainSolver.activeSubSolver?.constructor.name
+
+      // Now step until the subsolver completes or changes (something -> null)
       if (mainSolver.activeSubSolver !== null) {
         while (
           !mainSolver.solved &&
           !mainSolver.failed &&
-          mainSolver.activeSubSolver !== null
+          mainSolver.activeSubSolver !== null &&
+          mainSolver.activeSubSolver?.constructor.name === initialSubSolverName
         ) {
           mainSolver.step()
         }

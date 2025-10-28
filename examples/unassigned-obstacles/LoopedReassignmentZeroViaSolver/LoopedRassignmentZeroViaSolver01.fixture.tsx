@@ -1,7 +1,8 @@
-import { AutoroutingPipelineDebugger } from "lib/testing/AutoroutingPipelineDebugger"
+import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
+import { LoopedReassignmentZeroViaSolver } from "lib/solvers/LoopedReassignmentZeroViaSolver/LoopedReassignmentZeroViaSolver"
 import { SimpleRouteJson } from "lib/types"
 
-const simpleRouteJson: SimpleRouteJson = {
+export const simpleRouteJson: SimpleRouteJson = {
   layerCount: 2,
   minTraceWidth: 0.15,
   obstacles: [
@@ -47,5 +48,12 @@ const simpleRouteJson: SimpleRouteJson = {
 }
 
 export default () => {
-  return <AutoroutingPipelineDebugger srj={simpleRouteJson} />
+  return (
+    <GenericSolverDebugger
+      createSolver={() =>
+        new LoopedReassignmentZeroViaSolver(simpleRouteJson, {})
+      }
+      showDeepestVisualizationInitial={true}
+    />
+  )
 }
