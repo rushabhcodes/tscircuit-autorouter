@@ -2,7 +2,7 @@ import { GenericSolverDebugger } from "lib/testing/GenericSolverDebugger"
 import { LoopedReassignmentZeroViaSolver } from "lib/solvers/LoopedReassignmentZeroViaSolver/LoopedReassignmentZeroViaSolver"
 import { SimpleRouteJson } from "lib/types"
 
-const simpleRouteJson: SimpleRouteJson = {
+export const simpleRouteJson: SimpleRouteJson = {
   layerCount: 2,
   minTraceWidth: 0.15,
   obstacles: [

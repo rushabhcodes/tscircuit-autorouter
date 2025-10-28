@@ -107,4 +107,30 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
     }
     return convertSrjToGraphicsObject(this.inputSrj)
   }
+
+  getOutputSimplifiedPcbTraces() {
+    if (!this.solved) {
+      throw new Error("LoopedReassignmentZeroViaSolver has not been solved yet")
+    }
+    if (
+      this.activeSubSolver &&
+      this.activeSubSolver.constructor.name === "AutoroutingPipelineSolver"
+    ) {
+      return (this.activeSubSolver as AutoroutingPipelineSolver).getOutputSimplifiedPcbTraces()
+    }
+    throw new Error("No AutoroutingPipelineSolver available for output")
+  }
+
+  getOutputSimpleRouteJson(): SimpleRouteJson {
+    if (!this.solved) {
+      throw new Error("LoopedReassignmentZeroViaSolver has not been solved yet")
+    }
+    if (
+      this.activeSubSolver &&
+      this.activeSubSolver.constructor.name === "AutoroutingPipelineSolver"
+    ) {
+      return (this.activeSubSolver as AutoroutingPipelineSolver).getOutputSimpleRouteJson()
+    }
+    throw new Error("No AutoroutingPipelineSolver available for output")
+  }
 }
