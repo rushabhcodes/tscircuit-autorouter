@@ -1,4 +1,4 @@
-import { SimpleRouteJson, SimplifiedPcbTrace } from "lib/types"
+import { SimpleRouteJson, SimplifiedPcbTrace, Obstacle } from "lib/types"
 import { BaseSolver } from "../BaseSolver"
 import { AutoroutingPipelineSolverOptions } from "../AutoroutingPipelineSolver"
 import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
@@ -14,6 +14,15 @@ interface ObstacleAssignmentSolverInput {
     toLayer: string
     trace: SimplifiedPcbTrace
   }>
+}
+
+interface ObstacleWithIndex {
+  obstacle: Obstacle
+  index: number
+}
+
+interface ClosestObstacle extends ObstacleWithIndex {
+  distance: number
 }
 
 export class ObstacleAssignmentSolver extends BaseSolver {
@@ -36,26 +45,19 @@ export class ObstacleAssignmentSolver extends BaseSolver {
   }
 
   _step() {
-    // Clone the input SRJ to create the output on first step
+    // Initialize output SRJ on first step
     if (!this.outputSrj) {
       this.outputSrj = structuredClone(this.inputSrj)
     }
 
-    // Check if we've processed all vias
+    // Check if all vias have been processed
     if (this.currentViaIndex >= this.vias.length) {
       this.solved = true
       return
     }
 
-    if (!this.outputSrj) {
-      throw new Error("outputSrj should be defined at this point")
-    }
-
-    // Find all assignable obstacles
-    const assignableObstacles = this.outputSrj.obstacles
-      .map((obstacle, index) => ({ obstacle, index }))
-      .filter(({ obstacle }) => obstacle.netIsAssignable)
-
+    // Find assignable obstacles
+    const assignableObstacles = this.getAssignableObstacles()
     if (assignableObstacles.length === 0) {
       this.solved = true
       return
@@ -63,21 +65,37 @@ export class ObstacleAssignmentSolver extends BaseSolver {
 
     // Process one via per iteration
     const via = this.vias[this.currentViaIndex]
-    let closestObstacle: {
-      obstacle: any
-      index: number
-      distance: number
-    } | null = null
+    const closestObstacle = this.findClosestObstacleForVia(via, assignableObstacles)
+
+    if (closestObstacle) {
+      this.assignObstacleToVia(closestObstacle, via)
+    }
+
+    this.currentViaIndex++
+  }
+
+  private getAssignableObstacles() {
+    if (!this.outputSrj) {
+      throw new Error("outputSrj should be defined")
+    }
+
+    return this.outputSrj.obstacles
+      .map((obstacle, index) => ({ obstacle, index }))
+      .filter(({ obstacle }) => obstacle.netIsAssignable)
+  }
+
+  private findClosestObstacleForVia(
+    via: { x: number; y: number; fromLayer: string; toLayer: string },
+    assignableObstacles: ObstacleWithIndex[],
+  ) {
+    let closestObstacle: ClosestObstacle | null = null
 
     for (const { obstacle, index } of assignableObstacles) {
       // Check if the obstacle is on one of the via's layers
       const isOnViaLayer =
-        obstacle.layers.includes(via.fromLayer) ||
-        obstacle.layers.includes(via.toLayer)
+        obstacle.layers.includes(via.fromLayer) || obstacle.layers.includes(via.toLayer)
 
-      if (!isOnViaLayer) {
-        continue
-      }
+      if (!isOnViaLayer) continue
 
       // Calculate distance from via to obstacle center
       const distance = Math.sqrt(
@@ -89,100 +107,110 @@ export class ObstacleAssignmentSolver extends BaseSolver {
       }
     }
 
-    // If we found a closest obstacle, assign it to the via's net
-    if (closestObstacle && this.outputSrj) {
-      const obstacle = this.outputSrj.obstacles[closestObstacle.index]
-      const connectionName = via.trace.connection_name
+    return closestObstacle
+  }
 
-      // Remove the netIsAssignable flag since we've assigned it
-      obstacle.netIsAssignable = false
+  private assignObstacleToVia(
+    closestObstacle: ObstacleWithIndex,
+    via: { fromLayer: string; toLayer: string; trace: SimplifiedPcbTrace },
+  ) {
+    if (!this.outputSrj) return
 
-      // Track this as a newly assigned obstacle
-      this.newlyAssignedObstacleIndices.add(closestObstacle.index)
+    const obstacle = this.outputSrj.obstacles[closestObstacle.index]
+    const connectionName = via.trace.connection_name
 
-      // Split the connection into two new connections based on the via layers
-      const connectionIndex = this.outputSrj.connections.findIndex(
-        (c) => c.name === connectionName,
-      )
+    // Mark obstacle as assigned
+    obstacle.netIsAssignable = false
+    this.newlyAssignedObstacleIndices.add(closestObstacle.index)
 
-      if (connectionIndex !== -1) {
-        const originalConnection = this.outputSrj.connections[connectionIndex]
+    // Split the connection into two layer-specific connections
+    this.splitConnectionForObstacle(obstacle, via, connectionName)
+  }
 
-        // Split points by layer - each new connection will have points on only ONE layer
-        const fromLayerPoints = originalConnection.pointsToConnect.filter(
-          (p) => p.layer === via.fromLayer,
-        )
-        const toLayerPoints = originalConnection.pointsToConnect.filter(
-          (p) => p.layer === via.toLayer,
-        )
+  private splitConnectionForObstacle(
+    obstacle: Obstacle,
+    via: { fromLayer: string; toLayer: string },
+    connectionName: string,
+  ) {
+    if (!this.outputSrj) return
 
-        // Only split if we have points on both layers
-        if (fromLayerPoints.length > 0 && toLayerPoints.length > 0) {
-          // Create obstacle points for each layer
-          // Each connection gets an obstacle point on ITS layer
-          const obstaclePointFromLayer = {
-            x: obstacle.center.x,
-            y: obstacle.center.y,
-            layer: via.fromLayer,
-          }
+    const connectionIndex = this.outputSrj.connections.findIndex(
+      (c) => c.name === connectionName,
+    )
 
-          const obstaclePointToLayer = {
-            x: obstacle.center.x,
-            y: obstacle.center.y,
-            layer: via.toLayer,
-          }
-
-          // Create two new connections, each with points on only ONE layer
-          const connection1Name = `${connectionName}_${via.fromLayer}`
-          const connection2Name = `${connectionName}_${via.toLayer}`
-
-          // Connection 1: fromLayer points + obstacle point (all on fromLayer)
-          const connection1 = {
-            ...originalConnection,
-            name: connection1Name,
-            pointsToConnect: [...fromLayerPoints, obstaclePointFromLayer],
-          }
-
-          // Connection 2: toLayer points + obstacle point (all on toLayer)
-          const connection2 = {
-            ...originalConnection,
-            name: connection2Name,
-            pointsToConnect: [...toLayerPoints, obstaclePointToLayer],
-          }
-
-          // Remove the original connection name from the obstacle
-          const originalConnectionIdx = obstacle.connectedTo.indexOf(connectionName)
-          if (originalConnectionIdx !== -1) {
-            obstacle.connectedTo.splice(originalConnectionIdx, 1)
-          }
-
-          // Add the new connection names to the obstacle's connectedTo array
-          if (!obstacle.connectedTo.includes(connection1Name)) {
-            obstacle.connectedTo.push(connection1Name)
-          }
-          if (!obstacle.connectedTo.includes(connection2Name)) {
-            obstacle.connectedTo.push(connection2Name)
-          }
-
-          // Remove original connection and add the two new ones
-          this.outputSrj.connections.splice(connectionIndex, 1)
-          this.outputSrj.connections.push(connection1, connection2)
-        } else {
-          // If we can't split, just add the connection name as before
-          if (!obstacle.connectedTo.includes(connectionName)) {
-            obstacle.connectedTo.push(connectionName)
-          }
-        }
-      } else {
-        // If connection not found, just add the connection name
-        if (!obstacle.connectedTo.includes(connectionName)) {
-          obstacle.connectedTo.push(connectionName)
-        }
-      }
+    if (connectionIndex === -1) {
+      // Connection not found, just add it to the obstacle
+      this.addConnectionToObstacle(obstacle, connectionName)
+      return
     }
 
-    // Move to the next via
-    this.currentViaIndex++
+    const originalConnection = this.outputSrj.connections[connectionIndex]
+    const fromLayerPoints = originalConnection.pointsToConnect.filter(
+      (p) => p.layer === via.fromLayer,
+    )
+    const toLayerPoints = originalConnection.pointsToConnect.filter(
+      (p) => p.layer === via.toLayer,
+    )
+
+    // Only split if we have points on both layers
+    if (fromLayerPoints.length === 0 || toLayerPoints.length === 0) {
+      this.addConnectionToObstacle(obstacle, connectionName)
+      return
+    }
+
+    // Create two new single-layer connections
+    const connection1Name = `${connectionName}_${via.fromLayer}`
+    const connection2Name = `${connectionName}_${via.toLayer}`
+
+    const connection1 = {
+      ...originalConnection,
+      name: connection1Name,
+      pointsToConnect: [
+        ...fromLayerPoints,
+        { x: obstacle.center.x, y: obstacle.center.y, layer: via.fromLayer },
+      ],
+    }
+
+    const connection2 = {
+      ...originalConnection,
+      name: connection2Name,
+      pointsToConnect: [
+        ...toLayerPoints,
+        { x: obstacle.center.x, y: obstacle.center.y, layer: via.toLayer },
+      ],
+    }
+
+    // Update obstacle connections
+    this.replaceObstacleConnection(obstacle, connectionName, [connection1Name, connection2Name])
+
+    // Replace original connection with split connections
+    this.outputSrj.connections.splice(connectionIndex, 1)
+    this.outputSrj.connections.push(connection1, connection2)
+  }
+
+  private addConnectionToObstacle(obstacle: Obstacle, connectionName: string) {
+    if (!obstacle.connectedTo.includes(connectionName)) {
+      obstacle.connectedTo.push(connectionName)
+    }
+  }
+
+  private replaceObstacleConnection(
+    obstacle: Obstacle,
+    oldConnectionName: string,
+    newConnectionNames: string[],
+  ) {
+    // Remove the original connection name
+    const originalIdx = obstacle.connectedTo.indexOf(oldConnectionName)
+    if (originalIdx !== -1) {
+      obstacle.connectedTo.splice(originalIdx, 1)
+    }
+
+    // Add the new connection names
+    for (const newName of newConnectionNames) {
+      if (!obstacle.connectedTo.includes(newName)) {
+        obstacle.connectedTo.push(newName)
+      }
+    }
   }
 
   getOutputSrj(): SimpleRouteJson {
