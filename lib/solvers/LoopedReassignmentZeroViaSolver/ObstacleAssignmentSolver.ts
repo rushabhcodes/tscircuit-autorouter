@@ -65,7 +65,10 @@ export class ObstacleAssignmentSolver extends BaseSolver {
 
     // Process one via per iteration
     const via = this.vias[this.currentViaIndex]
-    const closestObstacle = this.findClosestObstacleForVia(via, assignableObstacles)
+    const closestObstacle = this.findClosestObstacleForVia(
+      via,
+      assignableObstacles,
+    )
 
     if (closestObstacle) {
       this.assignObstacleToVia(closestObstacle, via)
@@ -93,7 +96,8 @@ export class ObstacleAssignmentSolver extends BaseSolver {
     for (const { obstacle, index } of assignableObstacles) {
       // Check if the obstacle is on one of the via's layers
       const isOnViaLayer =
-        obstacle.layers.includes(via.fromLayer) || obstacle.layers.includes(via.toLayer)
+        obstacle.layers.includes(via.fromLayer) ||
+        obstacle.layers.includes(via.toLayer)
 
       if (!isOnViaLayer) continue
 
@@ -181,7 +185,10 @@ export class ObstacleAssignmentSolver extends BaseSolver {
     }
 
     // Update obstacle connections
-    this.replaceObstacleConnection(obstacle, connectionName, [connection1Name, connection2Name])
+    this.replaceObstacleConnection(obstacle, connectionName, [
+      connection1Name,
+      connection2Name,
+    ])
 
     // Replace original connection with split connections
     this.outputSrj.connections.splice(connectionIndex, 1)

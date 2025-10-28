@@ -116,7 +116,9 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
       this.activeSubSolver &&
       this.activeSubSolver.constructor.name === "AutoroutingPipelineSolver"
     ) {
-      return (this.activeSubSolver as AutoroutingPipelineSolver).getOutputSimplifiedPcbTraces()
+      return (
+        this.activeSubSolver as AutoroutingPipelineSolver
+      ).getOutputSimplifiedPcbTraces()
     }
     throw new Error("No AutoroutingPipelineSolver available for output")
   }
@@ -129,7 +131,9 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
       this.activeSubSolver &&
       this.activeSubSolver.constructor.name === "AutoroutingPipelineSolver"
     ) {
-      return (this.activeSubSolver as AutoroutingPipelineSolver).getOutputSimpleRouteJson()
+      return (
+        this.activeSubSolver as AutoroutingPipelineSolver
+      ).getOutputSimpleRouteJson()
     }
     throw new Error("No AutoroutingPipelineSolver available for output")
   }

@@ -21,9 +21,9 @@ test("LoopedReassignmentZeroViaSolver should solve with obstacle assignment", as
   expect(outputTraces.length).toBeGreaterThan(0)
 
   // Check that there are no vias in the output (the goal of this solver)
-  const viaCount = outputTraces
-    .flatMap((trace) => trace.route.filter((segment) => segment.route_type === "via"))
-    .length
+  const viaCount = outputTraces.flatMap((trace) =>
+    trace.route.filter((segment) => segment.route_type === "via"),
+  ).length
   expect(viaCount).toBe(0)
 
   // Verify the middle obstacle was assigned
