@@ -11,6 +11,7 @@ interface GenericSolverDebuggerProps {
   animationSpeed?: number
   onSolverStarted?: (solver: BaseSolver) => void
   onSolverCompleted?: (solver: BaseSolver) => void
+  showDeepestVisualizationInitial?: boolean
 }
 
 export const GenericSolverDebugger = ({
@@ -18,6 +19,7 @@ export const GenericSolverDebugger = ({
   animationSpeed = 10,
   onSolverStarted,
   onSolverCompleted,
+  showDeepestVisualizationInitial = false,
 }: GenericSolverDebuggerProps) => {
   const [mainSolver, setMainSolver] = useState<BaseSolver>(() => createSolver())
   const [previewMode, setPreviewMode] = useState(false)
@@ -26,7 +28,7 @@ export const GenericSolverDebugger = ({
   const [isAnimating, setIsAnimating] = useState(false)
   const [speedLevel, setSpeedLevel] = useState(0)
   const [showDeepestVisualization, setShowDeepestVisualization] =
-    useState(false)
+    useState(showDeepestVisualizationInitial)
   const [selectedSolverKey, setSelectedSolverKey] = useState<"main" | number>(
     "main",
   )

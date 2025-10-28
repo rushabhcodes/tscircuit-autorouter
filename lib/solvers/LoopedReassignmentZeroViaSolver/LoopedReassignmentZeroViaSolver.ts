@@ -6,6 +6,8 @@ import {
 } from "../AutoroutingPipelineSolver"
 import { areViasPresent } from "./areViasPresent"
 import { ObstacleAssignmentSolver } from "./ObstacleAssignmentSolver"
+import { convertSrjToGraphicsObject } from "lib/utils/convertSrjToGraphicsObject"
+import type { GraphicsObject } from "graphics-debug"
 
 interface LoopedReassignmentZeroViaSolverOptions
   extends AutoroutingPipelineSolverOptions {}
@@ -22,6 +24,7 @@ interface LoopedReassignmentZeroViaSolverOptions
  * 4. Repeat steps 2 and 3 until the problem is solved with zero vias
  */
 export class LoopedReassignmentZeroViaSolver extends BaseSolver {
+  MAX_ITERATIONS = 10e6
   inputSrj: SimpleRouteJson
   srjWithObstacleAssignments: SimpleRouteJson
   opts: LoopedReassignmentZeroViaSolverOptions
@@ -85,5 +88,12 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
     } else if (this.activeSubSolver.failed) {
       this.failed = true
     }
+  }
+
+  visualize(): GraphicsObject {
+    if (this.activeSubSolver) {
+      return this.activeSubSolver.visualize()
+    }
+    return convertSrjToGraphicsObject(this.inputSrj)
   }
 }
