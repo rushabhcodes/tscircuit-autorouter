@@ -56,6 +56,7 @@ interface CapacityMeshSolverOptions {
   targetMinCapacity?: number
   cacheProvider?: CacheProvider | null
 }
+export type AutoroutingPipelineSolverOptions = CapacityMeshSolverOptions
 
 type PipelineStep<T extends new (...args: any[]) => BaseSolver> = {
   solverName: string
