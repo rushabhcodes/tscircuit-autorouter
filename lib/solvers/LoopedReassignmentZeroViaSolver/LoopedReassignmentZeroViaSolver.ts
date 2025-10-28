@@ -54,7 +54,7 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
   _step() {
     if (!this.activeSubSolver) {
       this.activeSubSolver = new AutoroutingPipelineSolver(
-        this.inputSrj,
+        this.srjWithObstacleAssignments,
         this.opts,
       )
       return
@@ -85,6 +85,17 @@ export class LoopedReassignmentZeroViaSolver extends BaseSolver {
         return
       }
       this.solved = true
+    } else if (
+      this.activeSubSolver.constructor.name === "ObstacleAssignmentSolver" &&
+      this.activeSubSolver.solved
+    ) {
+      const assignmentSolver = this.activeSubSolver as ObstacleAssignmentSolver
+      this.srjWithObstacleAssignments = assignmentSolver.getOutputSrj()
+      // Start a new pipeline solver with the updated obstacle assignments
+      this.activeSubSolver = new AutoroutingPipelineSolver(
+        this.srjWithObstacleAssignments,
+        this.opts,
+      )
     } else if (this.activeSubSolver.failed) {
       this.failed = true
     }
