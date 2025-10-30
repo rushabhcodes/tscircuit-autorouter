@@ -37,9 +37,11 @@ import { HighDensityRoute } from "lib/types/high-density-types"
 import { CapacityMeshEdgeSolver2_NodeTreeOptimization } from "lib/solvers/CapacityMeshSolver/CapacityMeshEdgeSolver2_NodeTreeOptimization"
 import { DeadEndSolver } from "lib/solvers/DeadEndSolver/DeadEndSolver"
 import { UselessViaRemovalSolver } from "lib/solvers/UselessViaRemovalSolver/UselessViaRemovalSolver"
-import { CapacityPathingGreedySolver } from "lib/solvers/CapacityPathingSectionSolver/CapacityPathingGreedySolver"
 import { CacheProvider } from "lib/cache/types"
 import { getGlobalInMemoryCache } from "lib/cache/setupGlobalCaches"
+import { AssignableViaCapacityPathingSolver_PenalizeNonVia } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_PenalizeNonVia"
+import { HyperAssignableViaCapacityPathingSolver } from "./HyperAssignableViaCapacityPathingSolver"
+import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
 
 interface CapacityMeshSolverOptions {
   capacityDepth?: number
@@ -83,7 +85,8 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
   nodeSolver?: CapacityMeshNodeSolver
   nodeTargetMerger?: CapacityNodeTargetMerger
   edgeSolver?: CapacityMeshEdgeSolver
-  initialPathingSolver?: CapacityPathingGreedySolver
+  initialPathingSolver?: AssignableViaCapacityPathingSolver_DirectiveSubOptimal
+  initialPathingHyperSolver?: HyperAssignableViaCapacityPathingSolver
   pathingOptimizer?: CapacityPathingMultiSectionSolver
   edgeToPortSegmentSolver?: CapacityEdgeToPortSegmentSolver
   colorMap: Record<string, string>
@@ -190,8 +193,9 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
       },
     ),
     definePipelineStep(
-      "initialPathingSolver",
-      CapacityPathingGreedySolver,
+      "initialPathingHyperSolver",
+      // AssignableViaCapacityPathingSolver_DirectiveSubOptimal,
+      HyperAssignableViaCapacityPathingSolver,
       (cms) => [
         {
           simpleRouteJson: cms.srjWithPointPairs!,
@@ -203,25 +207,14 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
           },
         },
       ],
-    ),
-    definePipelineStep(
-      "pathingOptimizer",
-      // CapacityPathingSolver5,
-      CapacityPathingMultiSectionSolver,
-      (cms) => [
-        // Replaced solver class
-        {
-          initialPathingSolver: cms.initialPathingSolver,
-          simpleRouteJson: cms.srjWithPointPairs!,
-          nodes: cms.capacityNodes!,
-          edges: cms.capacityEdges || [],
-          colorMap: cms.colorMap,
-          cacheProvider: cms.cacheProvider,
-          hyperParameters: {
-            MAX_CAPACITY_FACTOR: 1,
-          },
+      {
+        onSolved: (cms) => {
+          const winningSolver = cms.initialPathingHyperSolver?.winningSolver
+          if (winningSolver) {
+            cms.initialPathingSolver = winningSolver
+          }
         },
-      ],
+      },
     ),
     definePipelineStep(
       "edgeToPortSegmentSolver",
@@ -230,7 +223,7 @@ export class AssignableViaAutoroutingPipelineSolver extends BaseSolver {
         {
           nodes: cms.capacityNodes!,
           edges: cms.capacityEdges || [],
-          capacityPaths: cms.pathingOptimizer?.getCapacityPaths() || [],
+          capacityPaths: cms.initialPathingSolver?.getCapacityPaths() || [],
           colorMap: cms.colorMap,
         },
       ],
