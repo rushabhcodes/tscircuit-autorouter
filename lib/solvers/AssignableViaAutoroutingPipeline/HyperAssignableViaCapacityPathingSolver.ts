@@ -1,3 +1,4 @@
+import type { GraphicsObject } from "graphics-debug"
 import { HyperParameterSupervisorSolver } from "lib/solvers/HyperParameterSupervisorSolver"
 import type { CapacityHyperParameters } from "lib/solvers/CapacityHyperParameters"
 import { AssignableViaCapacityPathingSolver_DirectiveSubOptimal } from "./AssignableViaCapacityPathing/AssignableViaCapacityPathingSolver_DirectiveSubOptimal"
@@ -82,5 +83,13 @@ export class HyperAssignableViaCapacityPathingSolver extends HyperParameterSuper
         ...hyperParameters,
       },
     })
+  }
+
+  preview(): GraphicsObject {
+    const bestSupervisedSolver = this.getSupervisedSolverWithBestFitness()
+    if (bestSupervisedSolver) {
+      return bestSupervisedSolver.solver.preview()
+    }
+    return {}
   }
 }

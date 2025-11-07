@@ -36,7 +36,9 @@ test("core2 - two traces", async () => {
 
   const circuitJson = circuit.getCircuitJson()
 
-  expect(convertCircuitJsonToPcbSvg(circuitJson)).toMatchSvgSnapshot(
-    import.meta.path,
-  )
+  expect(
+    convertCircuitJsonToPcbSvg(
+      circuitJson as Parameters<typeof convertCircuitJsonToPcbSvg>[0],
+    ),
+  ).toMatchSvgSnapshot(import.meta.path)
 })

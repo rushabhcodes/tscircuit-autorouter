@@ -15,7 +15,7 @@ import {
   seededRandom,
 } from "lib/utils/cloneAndShuffleArray"
 import { mapLayerNameToZ } from "lib/utils/mapLayerNameToZ"
-import { GraphicsObject } from "graphics-debug"
+import type { GraphicsObject, Line } from "graphics-debug"
 import { createRectFromCapacityNode } from "lib/utils/createRectFromCapacityNode"
 import { safeTransparentize } from "lib/solvers/colors"
 import { distance } from "@tscircuit/math-utils"
@@ -1008,5 +1008,94 @@ export class AssignableViaCapacityPathingSolver_DirectiveSubOptimal extends Base
     }
 
     return graphics
+  }
+
+  preview(): GraphicsObject {
+    const MAX_SEGMENTS = 60
+    const lines: Line[] = []
+    const points: NonNullable<GraphicsObject["points"]> = []
+
+    const addPathSegments = (
+      path: CapacityMeshNode[] | null | undefined,
+      color: string,
+    ) => {
+      if (!path || path.length < 2) return
+      for (let i = 0; i < path.length - 1 && lines.length < MAX_SEGMENTS; i++) {
+        const start = path[i]?.center
+        const end = path[i + 1]?.center
+        if (!start || !end) continue
+        if (!Number.isFinite(start.x) || !Number.isFinite(start.y)) continue
+        if (!Number.isFinite(end.x) || !Number.isFinite(end.y)) continue
+        lines.push({
+          points: [
+            { x: start.x, y: start.y },
+            { x: end.x, y: end.y },
+          ],
+          strokeColor: color,
+        })
+      }
+    }
+
+    const addEndpointPoints = (
+      path: CapacityMeshNode[] | null | undefined,
+      label?: string,
+    ) => {
+      if (!path || path.length === 0) return
+      const start = path[0]?.center
+      const end = path[path.length - 1]?.center
+      if (start && Number.isFinite(start.x) && Number.isFinite(start.y)) {
+        points.push({
+          x: start.x,
+          y: start.y,
+          label,
+        })
+      }
+      if (end && Number.isFinite(end.x) && Number.isFinite(end.y)) {
+        points.push({
+          x: end.x,
+          y: end.y,
+        })
+      }
+    }
+
+    const recentSolvedRoutes = this.solvedRoutes.slice(-3)
+    for (const solvedRoute of recentSolvedRoutes) {
+      const color =
+        this.colorMap[solvedRoute.connection.name] ?? "rgba(0, 120, 255, 0.9)"
+      addPathSegments(solvedRoute.path, color)
+      addEndpointPoints(solvedRoute.path, solvedRoute.connection.name)
+      if (lines.length >= MAX_SEGMENTS) break
+    }
+
+    if (lines.length < MAX_SEGMENTS && this.activeSubpath?.path) {
+      addPathSegments(this.activeSubpath.path, "rgba(255, 165, 0, 0.9)")
+      addEndpointPoints(
+        this.activeSubpath.path,
+        this.activeConnectionPair?.connection.name,
+      )
+    }
+
+    if (lines.length === 0 && this.activeConnectionPair) {
+      const { start, end, connection } = this.activeConnectionPair
+      const startCenter = start.center
+      const endCenter = end.center
+      if (startCenter && endCenter) {
+        lines.push({
+          points: [
+            { x: startCenter.x, y: startCenter.y },
+            { x: endCenter.x, y: endCenter.y },
+          ],
+          strokeColor:
+            this.colorMap[connection.name] ?? "rgba(0, 120, 255, 0.6)",
+          strokeDash: "4 3",
+        })
+        points.push(
+          { x: startCenter.x, y: startCenter.y, label: connection.name },
+          { x: endCenter.x, y: endCenter.y },
+        )
+      }
+    }
+
+    return { lines, points }
   }
 }
